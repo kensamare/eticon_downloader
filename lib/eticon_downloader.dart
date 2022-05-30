@@ -21,10 +21,7 @@ class EticonDownloader {
     return version;
   }
 
-  static Future<bool> downloadFile(
-      {required String url,
-      String fileName = "",
-      bool addTimestamp = true}) async {
+  static Future<bool> downloadFile({required String url, String fileName = "", bool addTimestamp = true}) async {
     try {
       if (url.isEmpty) {
         throw EticonDownloadError(error: 'Url is empty');
@@ -41,10 +38,7 @@ class EticonDownloader {
           if (fileName.isEmpty) {
             fileName = basename(url);
           }
-          return await saveToDownloadDir(
-              bytes: response.bodyBytes,
-              fileName: fileName,
-              addTimestamp: addTimestamp);
+          return await saveToDownloadDir(bytes: response.bodyBytes, fileName: fileName, addTimestamp: addTimestamp);
         }
       } else {
         return false;
@@ -92,14 +86,12 @@ class EticonDownloader {
           fileFormat == '.3gpp' ||
           fileFormat == '.mkv' ||
           fileFormat == '.flv') {
-        if (!(await _requestPermission(
-            Platform.isAndroid ? Permission.storage : Permission.photos))) {
+        if (!(await _requestPermission(Platform.isAndroid ? Permission.storage : Permission.photos))) {
           return false;
         }
         await GallerySaver.saveVideo(url);
       } else {
-        if (!(await _requestPermission(
-            Platform.isAndroid ? Permission.storage : Permission.photos))) {
+        if (!(await _requestPermission(Platform.isAndroid ? Permission.storage : Permission.photos))) {
           return false;
         }
         await GallerySaver.saveImage(url);
@@ -113,21 +105,22 @@ class EticonDownloader {
   static Future<bool> saveToDownloadDir(
       {required List<int> bytes,
       required String fileName,
-      bool addTimestamp = true}) async {
+      bool addTimestamp = true,
+      bool requestPermissionStrorage = false}) async {
     try {
+      if(requestPermissionStrorage){
+        if(!await _requestPermission(Permission.storage)){
+          throw EticonDownloadError(error: 'Permission denied');
+        }
+      }
       if (addTimestamp) {
         String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
         int indexOfExtr = fileName.lastIndexOf('.');
-        fileName = fileName.substring(0, indexOfExtr) +
-            '_$timestamp' +
-            fileName.substring(indexOfExtr);
+        fileName = fileName.substring(0, indexOfExtr) + '_$timestamp' + fileName.substring(indexOfExtr);
       }
       String savePath;
-      if (Platform.isIOS ||
-          (Platform.isAndroid &&
-              (await DeviceInfoPlugin().androidInfo).version.sdkInt! >= 29)) {
-        savePath =
-            '${(await path.getApplicationDocumentsDirectory()).path}/$fileName';
+      if (Platform.isIOS || (Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! >= 29)) {
+        savePath = '${(await path.getApplicationDocumentsDirectory()).path}/$fileName';
       } else {
         savePath = '${(await AndroidPathProvider.downloadsPath)}/$fileName';
       }
@@ -138,18 +131,13 @@ class EticonDownloader {
       File(savePath)
         ..createSync()
         ..writeAsBytesSync(bytes);
-      if (Platform.isAndroid &&
-          (await DeviceInfoPlugin().androidInfo).version.sdkInt! >= 29) {
-        await _channel.invokeMethod('downloadFiles', {
-          "fileName": fileName,
-          "mime": mime(fileName),
-          "localPath": savePath
-        });
+      if (Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! >= 29) {
+        await _channel
+            .invokeMethod('downloadFiles', {"fileName": fileName, "mime": mime(fileName), "localPath": savePath});
         File(savePath).deleteSync();
       }
     } catch (error) {
-      throw EticonDownloadError(
-          error: 'Problem with saving to downloads directory, error: $error');
+      throw EticonDownloadError(error: 'Problem with saving to downloads directory, error: $error');
     }
     return true;
   }

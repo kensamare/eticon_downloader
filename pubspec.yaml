@@ -1,6 +1,6 @@
 name: eticon_downloader
 description: Flutter plugin to download file in download directory
-version: 1.0.0
+version: 1.0.1
 homepage:
 
 environment:
