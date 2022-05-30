@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/eticon_downloader.iml" filepath="$PROJECT_DIR$/eticon_downloader.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/eticon_downloader_android.iml" filepath="$PROJECT_DIR$/android/eticon_downloader_android.iml" />
     </modules>
   </component>
 </project>
